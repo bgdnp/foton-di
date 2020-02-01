@@ -3,6 +3,7 @@
 namespace Bgdnp\Foton\DI;
 
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionParameter;
 
 class Resolver
@@ -23,6 +24,19 @@ class Resolver
         return $this->resolveClass(new ReflectionClass($key));
     }
 
+    public function invoke($instance, string $method)
+    {
+        $reflection = new ReflectionMethod($instance, $method);
+
+        $parameters = [];
+
+        foreach ($reflection->getParameters() as $parameter) {
+            $parameters[] = $this->resolveParameter($parameter);
+        }
+
+        return $reflection->invokeArgs($instance, $parameters);
+    }
+
     protected function resolveClass(ReflectionClass $reflection)
     {
         $key = $reflection->getName();
@@ -37,13 +51,13 @@ class Resolver
             return $this->newInstance($reflection);
         }
 
-        $dependencies = [];
+        $parameters = [];
 
         foreach ($constructor->getParameters() as $parameter) {
-            $dependencies[] = $this->resolveParameter($parameter);
+            $parameters[] = $this->resolveParameter($parameter);
         }
 
-        return $this->newInstance($reflection, $dependencies);
+        return $this->newInstance($reflection, $parameters);
     }
 
     protected function resolveParameter(ReflectionParameter $parameter)
@@ -80,6 +94,10 @@ class Resolver
         }
 
         $this->saveToPool = true;
+
+        if (method_exists($instance, '__init')) {
+            $this->invoke($instance, '__init');
+        }
 
         return $instance;
     }
