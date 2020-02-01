@@ -31,6 +31,13 @@ class Container implements ContainerInterface
         return $this->resolver->resolve($key, $parameters);
     }
 
+    public function invoke(string $class, string $method)
+    {
+        $instance = $this->get($class);
+
+        return $this->resolver->invoke($instance, $method);
+    }
+
     public function has($key)
     {
         return $this->pool->has($key);
@@ -39,6 +46,15 @@ class Container implements ContainerInterface
     public function parameters(array $parameters): Container
     {
         $this->parameters = $parameters;
+
+        return $this;
+    }
+
+    public function build(array $definitions): Container
+    {
+        foreach ($definitions as $key => $definition) {
+            $this->pool->add($key, $definition);
+        }
 
         return $this;
     }
