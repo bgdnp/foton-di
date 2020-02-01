@@ -8,14 +8,18 @@ use ReflectionParameter;
 class Resolver
 {
     protected $pool;
+    protected $parameters;
+    protected $saveToPool = true;
 
     public function __construct(Pool $pool)
     {
         $this->pool = $pool;
     }
 
-    public function resolve(string $key)
+    public function resolve(string $key, ?array $parameters)
     {
+        $this->parameters = $parameters;
+
         return $this->resolveClass(new ReflectionClass($key));
     }
 
@@ -27,6 +31,8 @@ class Resolver
             return $this->pool->get($key);
         }
 
+        var_dump('resolver');
+
         $constructor = $reflection->getConstructor();
 
         if (!$constructor) {
@@ -36,7 +42,7 @@ class Resolver
         $dependencies = [];
 
         foreach ($constructor->getParameters() as $parameter) {
-            $dependencies[$parameter->getPosition()] = $this->resolveParameter($parameter);
+            $dependencies[] = $this->resolveParameter($parameter);
         }
 
         return $this->newInstance($reflection, $dependencies);
@@ -44,14 +50,26 @@ class Resolver
 
     protected function resolveParameter(ReflectionParameter $parameter)
     {
+        if ($this->parameters[$parameter->getName()]) {
+            $this->saveToPool = false;
+
+            return $this->parameters[$parameter->getName()];
+        }
+
         if ($parameter->getClass()) {
             return $this->resolveClass($parameter->getClass());
+        }
+
+        if ($parameter->isDefaultValueAvailable()) {
+            $this->saveToPool = false;
+
+            return $parameter->getDefaultValue();
         }
 
         return null;
     }
 
-    protected function newInstance(ReflectionClass $reflection, array $dependencies = null, bool $save = true)
+    protected function newInstance(ReflectionClass $reflection, array $dependencies = null)
     {
         if ($dependencies) {
             $instance = $reflection->newInstanceArgs($dependencies);
@@ -59,9 +77,11 @@ class Resolver
             $instance = $reflection->newInstance();
         }
 
-        if ($save) {
+        if ($this->saveToPool) {
             $this->pool->add($reflection->getName(), $instance);
         }
+
+        $this->saveToPool = true;
 
         return $instance;
     }

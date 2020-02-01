@@ -8,6 +8,7 @@ class Container implements ContainerInterface
 {
     protected $pool;
     protected $resolver;
+    protected $parameters;
 
     public function __construct()
     {
@@ -24,11 +25,21 @@ class Container implements ContainerInterface
             return $this->pool->get($key);
         }
 
-        return $this->resolver->resolve($key);
+        $parameters = $this->parameters;
+        $this->parameters = null;
+
+        return $this->resolver->resolve($key, $parameters);
     }
 
     public function has($key)
     {
         return $this->pool->has($key);
+    }
+
+    public function parameters(array $parameters): Container
+    {
+        $this->parameters = $parameters;
+
+        return $this;
     }
 }
