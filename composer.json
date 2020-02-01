@@ -1,0 +1,20 @@
+{
+  "name": "bgdnp/foton-di",
+  "description": "Simple PHP dependency injection",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Bogdan Petkovic",
+      "email": "bogdanpetkovic@outlook.com"
+    }
+  ],
+  "require": {
+    "psr/container": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Bgdnp\\Foton\\DI\\": "src/"
+    }
+  }
+}
