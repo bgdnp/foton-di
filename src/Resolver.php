@@ -31,8 +31,6 @@ class Resolver
             return $this->pool->get($key);
         }
 
-        var_dump('resolver');
-
         $constructor = $reflection->getConstructor();
 
         if (!$constructor) {
