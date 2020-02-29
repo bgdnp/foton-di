@@ -1,6 +1,6 @@
 <?php
 
-namespace Bgdnp\Foton\DI;
+namespace Bgdnp\FotonDI;
 
 use Psr\Container\ContainerInterface;
 
